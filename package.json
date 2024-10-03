@@ -5,8 +5,35 @@
     "main": "main.js",
     "scripts": {
         "start": "electron-forge start",
-        "package": "electron-forge package",
-        "build": "electron-forge make"
+        "forge": "electron-forge make"
+    },
+    "build": {
+        "appId": "com.binariez.Ja3farMortada.vet-electron",
+        "productName": "Veterinary",
+        "target": "NSIS",
+        "publish": [
+            {
+                "provider": "github",
+                "owner": "Ja3farMortada",
+                "repo": "vet-electron"
+            }
+        ],
+        "win": {
+            "target": [
+                {
+                    "target": "squirrel",
+                    "arch": "x64"
+                }
+            ]
+        },
+        "npmRebuild": "false",
+        "directories": {
+            "buildResources": "resources"
+        }
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ja3farMortada/vet-electron.git"
     },
     "author": "Binariez LLC",
     "license": "ISC",
@@ -17,7 +44,8 @@
         "electron-log": "^4.4.8",
         "electron-squirrel-startup": "^1.0.1",
         "electron-updater": "^6.1.1",
-        "moment": "^2.29.4"
+        "moment": "^2.29.4",
+        "update-electron-app": "^3.0.0"
     },
     "devDependencies": {
         "@electron-forge/cli": "^7.5.0",

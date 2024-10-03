@@ -1,5 +1,4 @@
 const { autoUpdater } = require("electron-updater");
-const { dialog } = require("electron");
 
 const log = require("electron-log");
 

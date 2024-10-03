@@ -4,7 +4,7 @@ const { FuseV1Options, FuseVersion } = require("@electron/fuses");
 module.exports = {
     packagerConfig: {
         asar: true,
-        icon: "icon",
+        icon: "./resources/icon",
     },
     rebuildConfig: {},
     makers: [
@@ -13,8 +13,8 @@ module.exports = {
             config: {
                 authors: "Binariez LLC",
                 description: "Veterinary System",
-                icon: "icon",
-                setupIcon: "icon.ico",
+                icon: "./resources/icon",
+                setupIcon: "./resources/icon.ico",
             },
         },
         {
