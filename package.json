@@ -1,6 +1,6 @@
 {
     "name": "veterinary",
-    "version": "2.1.4",
+    "version": "2.1.5",
     "description": "Veterinary Electron",
     "main": "main.js",
     "scripts": {
@@ -17,9 +17,7 @@
         "electron-log": "^4.4.8",
         "electron-squirrel-startup": "^1.0.1",
         "electron-updater": "^6.1.1",
-        "moment": "^2.29.4",
-        "mysql2": "^3.6.0",
-        "mysqldump": "^3.2.0"
+        "moment": "^2.29.4"
     },
     "devDependencies": {
         "@electron-forge/cli": "^7.5.0",
@@ -29,6 +27,7 @@
         "@electron-forge/maker-zip": "^7.5.0",
         "@electron-forge/plugin-auto-unpack-natives": "^7.5.0",
         "@electron-forge/plugin-fuses": "^7.5.0",
+        "@electron-forge/publisher-github": "^7.5.0",
         "@electron/fuses": "^1.8.0",
         "electron": "^32.1.2"
     }
