@@ -1,7 +1,6 @@
 const { app, BrowserWindow, ipcMain, Menu } = require("electron");
 
-// mysql dump
-const mysqldump = require("mysqldump");
+if (require('electron-squirrel-startup')) app.quit();
 
 // Menu
 const template = require("./menu");
@@ -32,7 +31,7 @@ async function createWindow() {
         show: false,
         webPreferences: {
             preload: path.join(__dirname, "preload.js"),
-        },
+        }
     });
     win.maximize();
     win.show();
