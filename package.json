@@ -5,7 +5,8 @@
     "main": "main.js",
     "scripts": {
         "start": "electron-forge start",
-        "forge": "electron-forge make"
+        "forge": "electron-forge make",
+        "build": "electron-forge publish"
     },
     "build": {
         "appId": "com.binariez.Ja3farMortada.vet-electron",
@@ -15,7 +16,8 @@
             {
                 "provider": "github",
                 "owner": "Ja3farMortada",
-                "repo": "vet-electron"
+                "repo": "vet-electron",
+                "releaseType": "release"
             }
         ],
         "win": {
