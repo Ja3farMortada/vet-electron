@@ -1,6 +1,6 @@
-const { app, BrowserWindow, ipcMain, Menu } = require("electron");
+const { app, BrowserWindow, ipcMain, Menu, dialog } = require("electron");
 
-if (require('electron-squirrel-startup')) app.quit();
+if (require("electron-squirrel-startup")) app.quit();
 
 // Menu
 const template = require("./menu");
@@ -31,7 +31,7 @@ async function createWindow() {
         show: false,
         webPreferences: {
             preload: path.join(__dirname, "preload.js"),
-        }
+        },
     });
     win.maximize();
     win.show();
@@ -50,7 +50,7 @@ async function createWindow() {
 
     // require update module
     const updater = require("./update");
-    updater(win, ipcMain);
+    updater(dialog, ipcMain);
 }
 
 app.whenReady().then(() => {
