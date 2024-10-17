@@ -1,6 +1,6 @@
 {
     "name": "veterinary",
-    "version": "2.1.0",
+    "version": "2.3.1",
     "description": "Veterinary Electron",
     "main": "main.js",
     "scripts": {
@@ -12,13 +12,16 @@
         "productName": "Veterinary",
         "target": "NSIS",
         "publish": [
-        {
-            "provider": "github",
-            "owner": "Ja3farMortada",
-            "repo": "vet-electron"
-        }
+            {
+                "provider": "github",
+                "owner": "Ja3farMortada",
+                "repo": "vet-electron"
+            }
         ],
-        "npmRebuild": "false"
+        "npmRebuild": "false",
+        "directories": {
+            "buildResources": "resources"
+        }
     },
     "repository": {
         "type": "git",
