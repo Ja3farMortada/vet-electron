@@ -1,0 +1,46 @@
+{
+    "name": "veterinary",
+    "version": "2.5.3",
+    "description": "Veterinary Electron",
+    "main": "main.js",
+    "scripts": {
+        "start": "electron .",
+        "build": "electron-builder --x64"
+    },
+    "build": {
+        "appId": "com.binariez.Ja3farMortada.vet-electron",
+        "productName": "Veterinary",
+        "target": "NSIS",
+        "publish": [
+            {
+                "provider": "github",
+                "owner": "Ja3farMortada",
+                "repo": "vet-electron"
+            }
+        ],
+        "npmRebuild": "false",
+        "directories": {
+            "buildResources": "resources"
+        }
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ja3farMortada/vet-electron.git"
+    },
+    "author": "Binariez LLC",
+    "license": "ISC",
+    "dependencies": {
+        "angular": "^1.8.3",
+        "bootstrap": "^5.3.3",
+        "electron-context-menu": "^3.6.1",
+        "electron-log": "^4.4.8",
+        "electron-updater": "^6.1.1",
+        "moment": "^2.29.4",
+        "mysql2": "^3.6.0",
+        "mysqldump": "^3.2.0"
+    },
+    "devDependencies": {
+        "electron": "^30.3.1",
+        "electron-builder": "^24.6.3"
+    }
+}
