@@ -1,6 +1,6 @@
 {
     "name": "veterinary",
-    "version": "2.8.0",
+    "version": "2.8.1",
     "description": "Veterinary Electron",
     "main": "main.js",
     "scripts": {
