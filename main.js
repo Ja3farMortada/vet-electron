@@ -1,14 +1,11 @@
 const { app, BrowserWindow, ipcMain, Menu } = require("electron");
-
-// mysql dump
-const mysqldump = require("mysqldump");
+const path = require("path");
 
 // Menu
 const template = require("./menu");
 const menu = Menu.buildFromTemplate(template);
 Menu.setApplicationMenu(menu);
 
-const path = require("path");
 
 // electron context menu
 contextMenu = require("electron-context-menu");
@@ -25,7 +22,7 @@ const isEnvSet = "ELECTRON_IS_DEV" in process.env;
 const getFromEnv = Number.parseInt(process.env.ELECTRON_IS_DEV, 10) === 1;
 const isDev = isEnvSet ? getFromEnv : !app.isPackaged;
 
-async function createWindow() {
+function createWindow() {
     const win = new BrowserWindow({
         width: 800,
         height: 600,
@@ -37,9 +34,9 @@ async function createWindow() {
     win.maximize();
     win.show();
 
-    const loadSystem = async function () {
+    const loadSystem = function () {
         if (isDev) {
-            win.loadURL("http://localhost:4200");
+            win.loadFile("app/browser/index.html");
         } else {
             win.loadFile("app/browser/index.html");
         }
@@ -47,7 +44,9 @@ async function createWindow() {
 
     loadSystem();
 
-    win.webContents.on("did-fail-load", () => loadSystem());
+    win.webContents.on("did-fail-load", () => {
+        loadSystem()
+    });
 
     // require update module
     const updater = require("./update");
@@ -70,7 +69,7 @@ app.on("window-all-closed", () => {
     }
 });
 
-let printWindow;
+// let printWindow;
 ipcMain.handle("print-invoice", async (event, data) => {
     printWindow = new BrowserWindow({
         width: 706.95553,

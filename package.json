@@ -1,7 +1,7 @@
 {
-    "name": "veterinary",
-    "version": "2.9.0",
-    "description": "Veterinary Electron",
+    "name": "vet",
+    "version": "2.9.1",
+    "description": "Veterinary",
     "main": "main.js",
     "scripts": {
         "start": "electron .",
@@ -35,9 +35,7 @@
         "electron-context-menu": "^3.6.1",
         "electron-log": "^4.4.8",
         "electron-updater": "^6.1.1",
-        "moment": "^2.29.4",
-        "mysql2": "^3.6.0",
-        "mysqldump": "^3.2.0"
+        "moment": "^2.29.4"
     },
     "devDependencies": {
         "electron": "^30.3.1",
