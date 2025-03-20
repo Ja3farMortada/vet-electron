@@ -1,21 +1,26 @@
 {
     "name": "vet",
-    "version": "2.9.1",
+    "version": "2.9.2",
     "description": "Veterinary",
     "main": "main.js",
     "scripts": {
         "start": "electron .",
-        "build": "electron-builder --x64"
+        "build": "rm -rf dist && electron-builder --x64 --win --publish always"
     },
     "build": {
         "appId": "com.binariez.Ja3farMortada.vet-electron",
         "productName": "Veterinary",
+        "artifactName": "${name}-${version}.${ext}",
         "target": "NSIS",
+        "win": {
+        "target": "nsis"
+        },
         "publish": [
             {
                 "provider": "github",
                 "owner": "Ja3farMortada",
-                "repo": "vet-electron"
+                "repo": "vet-electron",
+                "releaseType": "release"
             }
         ],
         "npmRebuild": "false",
