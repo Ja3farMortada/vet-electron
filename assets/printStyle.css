@@ -16,15 +16,13 @@ table {
 }
 
 @media print {
-    @page {
-        margin: 100px 0px; /* 100px top & bottom, 0px left & right */
-      }
+    
 
       body {
         margin: 0;
       }
       .content {
-        margin-top: 100px;
+        margin-top: 80px;
         margin-bottom: 50px;
       }
     /* footer.divFooter {
