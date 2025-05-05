@@ -6,7 +6,6 @@ const template = require("./menu");
 const menu = Menu.buildFromTemplate(template);
 Menu.setApplicationMenu(menu);
 
-
 // electron context menu
 contextMenu = require("electron-context-menu");
 contextMenu({
@@ -45,7 +44,7 @@ function createWindow() {
     loadSystem();
 
     win.webContents.on("did-fail-load", () => {
-        loadSystem()
+        loadSystem();
     });
 
     // require update module

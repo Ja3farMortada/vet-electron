@@ -16,7 +16,18 @@ table {
 }
 
 @media print {
-    footer.divFooter {
+    @page {
+        margin: 100px 0px; /* 100px top & bottom, 0px left & right */
+      }
+
+      body {
+        margin: 0;
+      }
+      .content {
+        margin-top: 100px;
+        margin-bottom: 50px;
+      }
+    /* footer.divFooter {
         width: 100%;
         bottom: 0;
         left: 0;
@@ -35,27 +46,9 @@ table {
     }
     .chunked_items{
         margin-top: 30%;
-    }
+    } */
 
 }
-
-
-/* table, th, td {
-    text-align: center;
-    padding: 0.25rem;
-    font-size: 0.675rem;
-}
-
-table {
-    width: 100%;
-    border-top: 2px solid black;
-    border-collapse: collapse;
-}
-td {
-    border-top: 1px solid black;
-    border-bottom: 1px solid black;
-    border-collapse: collapse;
-} */
 
 hr {
     border: solid 1px;
