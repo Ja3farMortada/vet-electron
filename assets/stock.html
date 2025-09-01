@@ -16,24 +16,22 @@
             <table class="table table-sm table-bordered text-center">
                 <thead>
                     <tr>
-                        <th>SKU</th>
+                        <!-- <th>SKU</th> -->
                         <th>Description</th>
                         <th>Category</th>
                         <th>Qty</th>
-                        <th>Avg Cost</th>
+                        <!-- <th>Avg Cost</th> -->
                         <th>Price</th>
-                        <th>TTC Price</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr ng-repeat="record in data">
-                        <td>{{ record.sku }}</td>
+                        <!-- <td>{{ record.sku }}</td> -->
                         <td>{{ record.product_name }}</td>
                         <td>{{ record.category_name }}</td>
                         <td>{{ record.quantity }}</td>
-                        <td>{{ record.average_cost_usd | currency }}</td>
+                        <!-- <td>{{ record.avg_cost_usd | currency }}</td> -->
                         <td>{{ record.unit_price_usd | currency }}</td>
-                        <td>{{ record.ttc_price | currency }}</td>
                     </tr>
                 </tbody>
             </table>

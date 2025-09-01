@@ -35,7 +35,7 @@ function createWindow() {
 
     const loadSystem = function () {
         if (isDev) {
-            win.loadFile("app/browser/index.html");
+            win.loadURL("http://localhost:4200");
         } else {
             win.loadFile("app/browser/index.html");
         }
@@ -80,6 +80,33 @@ ipcMain.handle("print-invoice", async (event, data) => {
     });
 
     printWindow.loadFile("assets/print.html");
+    printWindow.show();
+
+    const printOptions = {
+        silent: false, // Print without showing a dialog (optional)
+        marginsType: 0, // Set margin type (optional)
+    };
+    printWindow.webContents.on("did-finish-load", async function () {
+        await printWindow.webContents.send("printDocument", data);
+        printWindow.webContents.print(printOptions, (success) => {
+            printWindow.close();
+        });
+    });
+});
+
+// print stock table
+ipcMain.handle("print-stock", async (event, data) => {
+    // console.log(data);
+    printWindow = new BrowserWindow({
+        width: 706.95553,
+        height: 1000,
+        show: false,
+        webPreferences: {
+            preload: path.join(__dirname, "preload.js"),
+        },
+    });
+
+    printWindow.loadFile("assets/stock.html");
     printWindow.show();
 
     const printOptions = {
