@@ -136,7 +136,7 @@ ipcMain.handle("label-print", async (event, data) => {
     });
     // labelPrint.setMenu(null);
     labelPrint.loadFile("assets/labelPrint.html");
-    labelPrint.show();
+    // labelPrint.show();
 
     const printOptions = {
         silent: false,
