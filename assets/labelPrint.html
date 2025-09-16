@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Print</title>
+        <link
+            rel="stylesheet"
+            href="../node_modules/bootstrap/dist/css/bootstrap.min.css"
+        />
+        <script src="../node_modules/angular/angular.min.js"></script>
+        <script src="../node_modules/jsbarcode/dist/JsBarcode.all.min.js"></script>
+
+        <style>
+            @page {
+                margin: 0;
+                /* size: 80mm, auto; */
+                size: 1.5in 1in;
+            }
+            body {
+                /* width: 70mm; */
+                margin: 0;
+                padding: 0;
+                /* font-size: 12px; */
+            }
+            body {
+                width: 2in;
+                height: 1in;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+              }
+              
+              .print-section {
+                width: 100%; /* Ensure receipt content fits the page width */
+                /* padding: 5mm; */
+            }
+            #barcode {
+              width: 100%;
+              height: 1.2in;
+            }
+        </style>
+    </head>
+    <body ng-app="printApp" ng-controller="printController">
+        <div class="print-section">
+
+            <!-- thank msg -->
+            <!-- <p>Thank you for choosing us.</p> -->
+             <svg id="barcode"></svg>
+             <h6 class="m-0 text-center" ng-if="data.shortName">{{ data.shortName }}</h6>
+             <h6 class="m-0 text-center" ng-if="data.price">{{ data.price | currency }}</h6>
+        </div>
+    </body>
+
+    <script>
+        const app = angular.module("printApp", []);
+        app.controller("printController", function ($scope) {
+          
+          window.electron.print((event, data) => {
+            console.log(data);
+            $scope.$digest(($scope.data = data));
+            JsBarcode("#barcode", data.barcode, {
+              format: "CODE128",
+              lineColor: '#000000',
+              displayValue: data.displayBarcodeValue,
+              width: 1.5,
+              // height: 200
+            });
+          });
+        });
+    </script>
+</html>
