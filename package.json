@@ -1,6 +1,6 @@
 {
 	"name": "vet",
-	"version": "2.14.2",
+	"version": "2.14.4",
 	"description": "Veterinary",
 	"main": "main.js",
 	"scripts": {

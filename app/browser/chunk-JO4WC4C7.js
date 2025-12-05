@@ -1,0 +1,1 @@
+import{R as e}from"./chunk-XKMXT5SE.js";var a=(()=>{class t{transform(r){return new Intl.NumberFormat("en-US",{minimumFractionDigits:0}).format(Number(r))+" L.L"}static{this.\u0275fac=function(i){return new(i||t)}}static{this.\u0275pipe=e({name:"lira",type:t,pure:!0,standalone:!0})}}return t})();export{a};
