@@ -21,7 +21,7 @@ const isEnvSet = "ELECTRON_IS_DEV" in process.env;
 const getFromEnv = Number.parseInt(process.env.ELECTRON_IS_DEV, 10) === 1;
 const isDev = isEnvSet ? getFromEnv : !app.isPackaged;
 
-function createWindow() {
+async function createWindow() {
     const win = new BrowserWindow({
         width: 800,
         height: 600,
@@ -33,7 +33,7 @@ function createWindow() {
     win.maximize();
     win.show();
 
-    const loadSystem = function () {
+    const loadSystem = async function () {
         if (isDev) {
             win.loadURL("http://localhost:4200");
         } else {
@@ -52,7 +52,7 @@ function createWindow() {
     updater(win, ipcMain);
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
     createWindow();
 
     app.on("activate", () => {
