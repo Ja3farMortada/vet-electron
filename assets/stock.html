@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
@@ -9,10 +9,10 @@
             href="../node_modules/bootstrap/dist/css/bootstrap.min.css"
         />
         <link rel="stylesheet" href="printStyle.css" />
-        <script src="../node_modules/angular/angular.min.js"></script>
+        <script src="../node_modules/vue/dist/vue.global.js"></script>
     </head>
-    <body ng-app="printApp" ng-controller="printController">
-        <div class="container-fluid">
+    <body>
+        <div id="app" class="container-fluid">
             <table class="table table-sm table-bordered text-center">
                 <thead>
                     <tr>
@@ -25,35 +25,53 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="record in data">
+                    <tr v-for="(record, index) in data" :key="index">
                         <!-- <td>{{ record.sku }}</td> -->
                         <td>{{ record.product_name }}</td>
                         <td>{{ record.category_name }}</td>
                         <td>{{ record.quantity }}</td>
                         <!-- <td>{{ record.avg_cost_usd | currency }}</td> -->
-                        <td>{{ record.unit_price_usd | currency }}</td>
+                        <td>{{ formatCurrency(record.unit_price_usd) }}</td>
                     </tr>
                 </tbody>
             </table>
         </div>
+        <script>
+            const { createApp } = Vue;
+
+            createApp({
+                data() {
+                    return {
+                        data: [],
+                        chunks: [],
+                    };
+                },
+                methods: {
+                    formatCurrency(value) {
+                        if (value === undefined || value === null) return "";
+                        return new Intl.NumberFormat("en-US", {
+                            style: "currency",
+                            currency: "USD",
+                        }).format(value);
+                    },
+                    splitArrayIntoChunks(array, chunkSize) {
+                        this.chunks = [];
+                        for (let i = 0; i < array.length; i += chunkSize) {
+                            this.chunks.push(array.slice(i, i + chunkSize));
+                        }
+
+                        return this.chunks;
+                    },
+                },
+                mounted() {
+                    if (window.electron && window.electron.print) {
+                        window.electron.print((event, data) => {
+                            console.log(data);
+                            this.data = data;
+                        });
+                    }
+                },
+            }).mount("#app");
+        </script>
     </body>
-
-    <script>
-        const app = angular.module("printApp", []);
-        app.controller("printController", function ($scope) {
-            window.electron.print((event, data) => {
-                console.log(data);
-                $scope.$digest(($scope.data = data));
-            });
-
-            $scope.splitArrayIntoChunks = function (array, chunkSize) {
-                $scope.chunks = [];
-                for (let i = 0; i < array.length; i += chunkSize) {
-                    $scope.chunks.push(array.slice(i, i + chunkSize));
-                }
-
-                return $scope.chunks;
-            };
-        });
-    </script>
 </html>

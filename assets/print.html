@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
@@ -10,28 +10,20 @@
             href="../node_modules/bootstrap/dist/css/bootstrap.min.css"
         />
         <link rel="stylesheet" href="printStyle.css" />
-        <script src="../node_modules/angular/angular.min.js"></script>
+        <script src="../node_modules/vue/dist/vue.global.js"></script>
     </head>
-    <body ng-app="printApp" ng-controller="printController">
-        <div class="content primary">
+    <body>
+        <div id="app" class="content primary">
             <div class="row d-flex justify-content-between wrapper">
                 <div class="col-7">
                     <!-- <img src="logo.png" height="80px" /> -->
                 </div>
-                <div class="col-5 text-end">
-                    <!-- <p>
-                        <strong>العنوان:</strong> الجنوب - برعشيت - الطريق العام
-                        <br />
-                        قرب الساحة العامة - مبنى ذياب
-                        <br />
-                    </p>
-                    <p>+961 81-637 348<strong> :الهاتف</strong></p> -->
-                </div>
+                <div class="col-5 text-end"></div>
             </div>
 
             <hr class="mt-0 pt-0 primary-hr wrapper" />
 
-            <div class="row d-flex justify-content-between">
+            <div class="row d-flex justify-content-between" v-if="invoice">
                 <div class="col-6">
                     <p>
                         <strong>Billed To:</strong> {{ invoice.customer_name }}
@@ -47,8 +39,8 @@
                 </div>
 
                 <div class="col-4 text-end">
-                    <h3 ng-if="invoice.type == 'sale'">Sales Invoice</h3>
-                    <h3 ng-if="invoice.type == 'return'">Return Invoice</h3>
+                    <h3 v-if="invoice.type == 'sale'">Sales Invoice</h3>
+                    <h3 v-if="invoice.type == 'return'">Return Invoice</h3>
                     <p>
                         <strong>Invoice #:</strong> {{ invoice.invoice_number }}
                         <br />
@@ -59,7 +51,10 @@
                 <br />
             </div>
 
-            <table class="table table-bordered table-sm text-center">
+            <table
+                class="table table-bordered table-sm text-center"
+                v-if="invoice"
+            >
                 <thead>
                     <tr>
                         <th>#</th>
@@ -70,46 +65,65 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="record in invoice.items">
-                        <td>{{ $index + 1 }}</td>
+                    <tr v-for="(record, index) in invoice.items" :key="index">
+                        <td>{{ index + 1 }}</td>
                         <td>{{ record.product_name }}</td>
-                        <td>{{ record.unit_price | currency }}</td>
+                        <td>{{ formatCurrency(record.unit_price) }}</td>
 
                         <td>{{ record.quantity }}</td>
 
-                        <td>{{ record.total_price | currency }}</td>
+                        <td>{{ formatCurrency(record.total_price) }}</td>
                     </tr>
                 </tbody>
             </table>
 
-            <div class="row d-flex justify-content-end text-end">
+            <div class="row d-flex justify-content-end text-end" v-if="invoice">
                 <div class="col-6 text-end">
                     <strong
-                        >Grand total: {{ invoice.total_amount | currency
+                        >Grand total: {{ formatCurrency(invoice.total_amount)
                         }}</strong
                     >
                 </div>
             </div>
         </div>
+
+        <script>
+            const { createApp } = Vue;
+
+            createApp({
+                data() {
+                    return {
+                        invoice: null,
+                        chunks: [],
+                    };
+                },
+                methods: {
+                    formatCurrency(value) {
+                        // Angular's default currency filter formats as $1,234.56
+                        if (value === undefined || value === null) return "";
+                        return new Intl.NumberFormat("en-US", {
+                            style: "currency",
+                            currency: "USD",
+                        }).format(value);
+                    },
+                    splitArrayIntoChunks(array, chunkSize) {
+                        this.chunks = [];
+                        for (let i = 0; i < array.length; i += chunkSize) {
+                            this.chunks.push(array.slice(i, i + chunkSize));
+                        }
+
+                        return this.chunks;
+                    },
+                },
+                mounted() {
+                    if (window.electron && window.electron.print) {
+                        window.electron.print((event, data) => {
+                            console.log(data);
+                            this.invoice = data;
+                        });
+                    }
+                },
+            }).mount("#app");
+        </script>
     </body>
-
-    <script>
-        const app = angular.module("printApp", []);
-        app.controller("printController", function ($scope) {
-            window.electron.print((event, data) => {
-                console.log(data);
-                $scope.$digest(($scope.invoice = data));
-                // $scope.$digest(($scope.invoice = data.invoice));
-            });
-
-            $scope.splitArrayIntoChunks = function (array, chunkSize) {
-                $scope.chunks = [];
-                for (let i = 0; i < array.length; i += chunkSize) {
-                    $scope.chunks.push(array.slice(i, i + chunkSize));
-                }
-
-                return $scope.chunks;
-            };
-        });
-    </script>
 </html>
