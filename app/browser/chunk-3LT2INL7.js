@@ -1,0 +1,1 @@
+import{a as i}from"./chunk-2O7J7OZZ.js";import{N as e,Qb as o}from"./chunk-4UNOCWC4.js";var g=(n,s)=>{let t=e(i),r=e(o);return t.isLoggedIn()||r.navigate(["/login"]),t.isLoggedIn()},d=(n,s)=>{let t=e(i),r=e(o);return t.isLoggedIn()||r.navigate(["/login"]),t.isAdmin()};export{g as a,d as b};
