@@ -1,1 +1,0 @@
-import{a as i}from"./chunk-MCWGLIDN.js";import{N as e,Rb as o}from"./chunk-MSR342FR.js";var g=(n,s)=>{let t=e(i),r=e(o);return t.isLoggedIn()||r.navigate(["/login"]),t.isLoggedIn()},d=(n,s)=>{let t=e(i),r=e(o);return t.isLoggedIn()||r.navigate(["/login"]),t.isAdmin()};export{g as a,d as b};
