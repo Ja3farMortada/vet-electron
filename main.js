@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Menu } = require("electron");
+const { app, BrowserWindow, ipcMain, Menu, shell } = require("electron");
 const path = require("path");
 
 // Menu
@@ -66,6 +66,13 @@ app.on("window-all-closed", () => {
     if (process.platform !== "darwin") {
         app.quit();
     }
+});
+
+// Open a URL in the user's default external browser. Used for wa.me links so
+// WhatsApp gets the text via the browser (UTF-8) instead of an in-app window,
+// which preserves emojis.
+ipcMain.handle("open-external", async (event, url) => {
+    await shell.openExternal(url);
 });
 
 // let printWindow;
