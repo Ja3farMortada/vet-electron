@@ -1,0 +1,1 @@
+function o(t,e){if(!e||!e.trim())return!0;let n=(t??"").toLowerCase();return e.toLowerCase().split(/\s+/).filter(Boolean).every(r=>n.includes(r))}function i(t){t.register("tokenAnd",(e,n)=>o(e==null?"":String(e),n))}function l(...t){return t.filter(e=>e!=null&&e!=="").join(" ")}export{o as a,i as b,l as c};
