@@ -37,13 +37,40 @@ jobs:
             - name: Install Electron App Dependencies
               run: npm ci
 
-            # 4️⃣ Build & publish the Windows EXE
+            # 4️⃣ Create the release tag
+            #
+            # package.json sets "releaseType": "release", so electron-builder asks
+            # GitHub for a PUBLISHED (non-draft) release. GitHub rejects that with
+            #   422 "Published releases must have a valid tag"
+            # unless the tag already exists — and nothing here ever created it,
+            # since the workflow only pushes to main.
+            #
+            # So tag the commit first. Idempotent: if the version was not bumped,
+            # the tag is already on origin and we reuse it (electron-builder then
+            # just refreshes that release's assets).
+            - name: Create Release Tag
+              shell: bash
+              run: |
+                  VERSION=$(node -p "require('./package.json').version")
+                  TAG="v$VERSION"
+
+                  if git ls-remote --exit-code --tags origin "refs/tags/$TAG" > /dev/null 2>&1; then
+                      echo "Tag $TAG already exists on origin — reusing it."
+                  else
+                      git config user.name "github-actions[bot]"
+                      git config user.email "github-actions[bot]@users.noreply.github.com"
+                      git tag -a "$TAG" -m "Release $TAG"
+                      git push origin "$TAG"
+                      echo "Created and pushed $TAG"
+                  fi
+
+            # 5️⃣ Build & publish the Windows EXE
             - name: Build & Publish EXE
               run: npx electron-builder --x64 --win --publish always
               env:
                   GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
-            # 5️⃣ Upload EXE artifact (optional — the release above already
+            # 6️⃣ Upload EXE artifact (optional — the release above already
             # publishes it). v6 is the first major that runs on Node 24 by
             # default; v5 still defaulted to Node 20.
             # - name: Upload EXE Artifact
