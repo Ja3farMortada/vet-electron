@@ -37,31 +37,41 @@ jobs:
             - name: Install Electron App Dependencies
               run: npm ci
 
-            # 4️⃣ Create the release tag
+            # 4️⃣ Make sure the tag AND the release already exist
             #
-            # package.json sets "releaseType": "release", so electron-builder asks
-            # GitHub for a PUBLISHED (non-draft) release. GitHub rejects that with
-            #   422 "Published releases must have a valid tag"
-            # unless the tag already exists — and nothing here ever created it,
-            # since the workflow only pushes to main.
+            # Two problems this solves, both seen in real builds:
             #
-            # So tag the commit first. Idempotent: if the version was not bumped,
-            # the tag is already on origin and we reuse it (electron-builder then
-            # just refreshes that release's assets).
-            - name: Create Release Tag
+            #  a) package.json sets "releaseType": "release", so electron-builder
+            #     asks for a PUBLISHED (non-draft) release. GitHub refuses that
+            #     with 422 "Published releases must have a valid tag" if the tag
+            #     does not exist — and nothing here used to create it.
+            #
+            #  b) electron-builder publishes its artifacts CONCURRENTLY. When the
+            #     release is missing, each artifact's publisher races to create
+            #     it, and GitHub happily allows two releases on the same tag — so
+            #     the assets get split across them (v2.24.2 ended up with the
+            #     .exe on one release and only the .blockmap on the other).
+            #
+            # Creating the release up front removes the "create" path entirely:
+            # every publisher then just finds it and uploads into it. Idempotent —
+            # re-running without a version bump reuses the existing release.
+            - name: Ensure GitHub Release Exists
               shell: bash
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
               run: |
                   VERSION=$(node -p "require('./package.json').version")
                   TAG="v$VERSION"
 
-                  if git ls-remote --exit-code --tags origin "refs/tags/$TAG" > /dev/null 2>&1; then
-                      echo "Tag $TAG already exists on origin — reusing it."
+                  if gh release view "$TAG" > /dev/null 2>&1; then
+                      echo "Release $TAG already exists — electron-builder will upload into it."
                   else
-                      git config user.name "github-actions[bot]"
-                      git config user.email "github-actions[bot]@users.noreply.github.com"
-                      git tag -a "$TAG" -m "Release $TAG"
-                      git push origin "$TAG"
-                      echo "Created and pushed $TAG"
+                      # also creates the tag on this commit if it isn't there yet
+                      gh release create "$TAG" \
+                          --target "$GITHUB_SHA" \
+                          --title "$TAG" \
+                          --notes "Release $TAG"
+                      echo "Created release $TAG"
                   fi
 
             # 5️⃣ Build & publish the Windows EXE
