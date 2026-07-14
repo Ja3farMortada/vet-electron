@@ -3,7 +3,12 @@ const { dialog } = require("electron");
 
 const log = require("electron-log");
 
-module.exports = (win, ipcMain) => {
+/**
+ * @param getTargets () => webContents[] — every open tab. The window itself now
+ *        renders only the tab strip, so update events must be broadcast to the
+ *        tabs (where the Angular app lives), not to window.webContents.
+ */
+module.exports = (getTargets, ipcMain) => {
     // auto update module
 
     autoUpdater.autoDownload = false;
@@ -13,10 +18,11 @@ module.exports = (win, ipcMain) => {
     autoUpdater.logger.transports.file.level = "info";
 
     // define main to renderer message
-    async function sendStatusToWindow(message, data) {
-        if (win) {
-            await win.webContents.send(message, data);
-            // win.ipcMain.send(message, data);
+    function sendStatusToWindow(message, data) {
+        for (const webContents of getTargets() || []) {
+            if (webContents && !webContents.isDestroyed()) {
+                webContents.send(message, data);
+            }
         }
     }
 

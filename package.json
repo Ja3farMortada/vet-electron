@@ -1,6 +1,6 @@
 {
     "name": "vet",
-    "version": "2.23.4",
+    "version": "2.24.0",
     "description": "Veterinary",
     "main": "main.js",
     "scripts": {
@@ -36,15 +36,15 @@
     "license": "ISC",
     "dependencies": {
         "bootstrap": "^5.3.8",
-        "electron-context-menu": "^3.6.1",
-        "electron-log": "^5.4.3",
-        "electron-updater": "^6.6.2",
-        "jsbarcode": "^3.12.1",
+        "electron-context-menu": "^4.1.2",
+        "electron-log": "^5.4.4",
+        "electron-updater": "^6.8.9",
+        "jsbarcode": "^3.12.3",
         "moment": "^2.30.1",
-        "vue": "^3.5.28"
+        "vue": "^3.5.39"
     },
     "devDependencies": {
-        "electron": "^39.2.6",
-        "electron-builder": "^26.7.0"
+        "electron": "^43.1.1",
+        "electron-builder": "^26.15.3"
     }
 }

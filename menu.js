@@ -3,7 +3,14 @@ const {
     shell
 } = require('electron');
 
-const template = [
+/**
+ * Built per-window so the tab actions can be injected.
+ *
+ * Reload / Force Reload / Toggle DevTools are NOT roles any more: roles act on
+ * the focused window's webContents, which is now the tab strip. They have to be
+ * pointed at the active tab instead.
+ */
+module.exports = (actions = {}) => [
     // { role: 'appMenu' }
     ...(process.platform === 'darwin' ? [{
       label: app.getName(),
@@ -23,6 +30,28 @@ const template = [
     {
       label: 'File',
       submenu: [
+        {
+          label: 'New Tab',
+          accelerator: 'CmdOrCtrl+T',
+          click: () => actions.newTab?.()
+        },
+        {
+          label: 'Close Tab',
+          accelerator: 'CmdOrCtrl+W',
+          click: () => actions.closeTab?.()
+        },
+        { type: 'separator' },
+        {
+          label: 'Next Tab',
+          accelerator: 'Ctrl+Tab',
+          click: () => actions.nextTab?.()
+        },
+        {
+          label: 'Previous Tab',
+          accelerator: 'Ctrl+Shift+Tab',
+          click: () => actions.previousTab?.()
+        },
+        { type: 'separator' },
         process.platform === 'darwin' ? { role: 'close' } : { role: 'quit' }
       ]
     },
@@ -59,9 +88,21 @@ const template = [
     {
       label: 'View',
       submenu: [
-        { role: 'reload' },
-        { role: 'forcereload' },
-        { role: 'toggledevtools' },
+        {
+          label: 'Reload',
+          accelerator: 'CmdOrCtrl+R',
+          click: () => actions.reload?.()
+        },
+        {
+          label: 'Force Reload',
+          accelerator: 'CmdOrCtrl+Shift+R',
+          click: () => actions.forceReload?.()
+        },
+        {
+          label: 'Toggle Developer Tools',
+          accelerator: process.platform === 'darwin' ? 'Alt+Cmd+I' : 'Ctrl+Shift+I',
+          click: () => actions.toggleDevTools?.()
+        },
         { type: 'separator' },
         { role: 'resetzoom' },
         { role: 'zoomin' },
@@ -97,6 +138,4 @@ const template = [
         }
       ]
     }
-  ]
-
-module.exports = template;
+  ];

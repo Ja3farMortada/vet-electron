@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Veterinary</title>
+        <style>
+            :root {
+                --bar-bg: #e4e7ec;
+                --tab-bg: #d3d8e0;
+                --tab-active-bg: #ffffff;
+                --tab-text: #3f4854;
+                --tab-active-text: #11181f;
+                --border: #c3c9d2;
+                --accent: #3b82f6;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            html,
+            body {
+                margin: 0;
+                height: 40px;
+                overflow: hidden;
+                background: var(--bar-bg);
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                    sans-serif;
+                user-select: none;
+                cursor: default;
+            }
+
+            .strip {
+                display: flex;
+                align-items: flex-end;
+                height: 40px;
+                padding: 4px 6px 0;
+                gap: 4px;
+                overflow-x: auto;
+                overflow-y: hidden;
+                scrollbar-width: none;
+                border-bottom: 1px solid var(--border);
+            }
+            .strip::-webkit-scrollbar {
+                display: none;
+            }
+
+            .tab {
+                position: relative;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex: 0 1 200px;
+                min-width: 90px;
+                height: 30px;
+                padding: 0 8px 0 12px;
+                border-radius: 8px 8px 0 0;
+                background: var(--tab-bg);
+                color: var(--tab-text);
+                font-size: 12px;
+                border: 1px solid var(--border);
+                border-bottom: none;
+                /* inactive tabs sit lower and read as "behind" the active one */
+                opacity: 0.72;
+                transition:
+                    background 0.12s ease,
+                    opacity 0.12s ease,
+                    height 0.12s ease;
+            }
+            .tab:hover {
+                background: #dde1e8;
+                opacity: 0.9;
+            }
+
+            /* Active tab: taller, full white, full opacity, a thick accent bar on
+               top, and it visually merges with the page below by covering the
+               strip's bottom border. Impossible to miss. */
+            .tab.active {
+                height: 36px;
+                background: var(--tab-active-bg);
+                color: var(--tab-active-text);
+                font-weight: 700;
+                opacity: 1;
+                border-color: var(--border);
+                box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.12);
+                z-index: 1;
+            }
+            .tab.active::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                border-radius: 8px 8px 0 0;
+                background: var(--accent);
+            }
+            /* paints over the strip's bottom edge, so the active tab looks
+               connected to the page it is showing */
+            .tab.active::after {
+                content: "";
+                position: absolute;
+                bottom: -1px;
+                left: 0;
+                right: 0;
+                height: 2px;
+                background: var(--tab-active-bg);
+            }
+            .tab.active .tab__title {
+                color: var(--tab-active-text);
+            }
+
+            .tab__title {
+                flex: 1 1 auto;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .tab__close,
+            .new-tab {
+                flex: 0 0 auto;
+                display: grid;
+                place-items: center;
+                width: 20px;
+                height: 20px;
+                border: 0;
+                border-radius: 50%;
+                background: transparent;
+                color: inherit;
+                font-size: 14px;
+                line-height: 1;
+                cursor: pointer;
+            }
+            .tab__close:hover {
+                background: rgba(0, 0, 0, 0.12);
+            }
+
+            .new-tab {
+                align-self: center;
+                width: 26px;
+                height: 26px;
+                margin-bottom: 4px;
+                font-size: 17px;
+                color: var(--tab-text);
+            }
+            .new-tab:hover {
+                background: rgba(0, 0, 0, 0.08);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="strip" id="strip"></div>
+
+        <script>
+            const strip = document.getElementById("strip");
+
+            function render(tabs) {
+                strip.replaceChildren();
+
+                for (const tab of tabs) {
+                    const el = document.createElement("div");
+                    el.className = "tab" + (tab.active ? " active" : "");
+                    el.title = tab.title;
+                    el.addEventListener("mousedown", (event) => {
+                        // middle-click closes, like a browser
+                        if (event.button === 1) {
+                            event.preventDefault();
+                            window.tabsApi.close(tab.id);
+                        } else if (event.button === 0) {
+                            window.tabsApi.select(tab.id);
+                        }
+                    });
+
+                    const title = document.createElement("span");
+                    title.className = "tab__title";
+                    title.textContent = tab.title;
+                    el.appendChild(title);
+
+                    // Only offer a close button when closing still leaves a tab.
+                    if (tabs.length > 1) {
+                        const close = document.createElement("button");
+                        close.className = "tab__close";
+                        close.textContent = "×";
+                        close.title = "Close tab";
+                        close.addEventListener("mousedown", (event) => {
+                            event.stopPropagation();
+                        });
+                        close.addEventListener("click", (event) => {
+                            event.stopPropagation();
+                            window.tabsApi.close(tab.id);
+                        });
+                        el.appendChild(close);
+                    }
+
+                    strip.appendChild(el);
+                }
+
+                const add = document.createElement("button");
+                add.className = "new-tab";
+                add.textContent = "+";
+                add.title = "New tab";
+                add.addEventListener("click", () => window.tabsApi.newTab());
+                strip.appendChild(add);
+            }
+
+            window.tabsApi.onState(render);
+        </script>
+    </body>
+</html>

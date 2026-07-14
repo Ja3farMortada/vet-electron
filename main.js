@@ -1,10 +1,8 @@
 const { app, BrowserWindow, ipcMain, Menu, shell } = require("electron");
 const path = require("path");
 
-// Menu
-const template = require("./menu");
-const menu = Menu.buildFromTemplate(template);
-Menu.setApplicationMenu(menu);
+const buildMenuTemplate = require("./menu");
+const { createTabManager } = require("./tabs");
 
 // electron context menu
 contextMenu = require("electron-context-menu");
@@ -21,38 +19,90 @@ const isEnvSet = "ELECTRON_IS_DEV" in process.env;
 const getFromEnv = Number.parseInt(process.env.ELECTRON_IS_DEV, 10) === 1;
 const isDev = isEnvSet ? getFromEnv : !app.isPackaged;
 
+// Tab manager of the current window. IPC + auto-update handlers are registered
+// once and resolve it lazily, so a re-created window keeps working.
+let activeTabManager = null;
+
+/**
+ * Loads the app into a tab. Every tab loads the app from scratch, so it starts
+ * on the home page — and because all tabs share the window's default session,
+ * a new tab already has the same cookies/localStorage (so it is already logged
+ * in and sees the same saved data), exactly like a new browser tab.
+ */
+function loadTab(webContents) {
+    const load = () => {
+        if (isDev) {
+            webContents.loadURL("http://localhost:4200");
+        } else {
+            webContents.loadFile(path.join(__dirname, "app/browser/index.html"));
+        }
+    };
+
+    webContents.on("did-fail-load", () => load());
+    load();
+}
+
 async function createWindow() {
+    // The window itself renders ONLY the tab strip; the pages live in
+    // WebContentsViews stacked underneath it (see tabs.js).
     const win = new BrowserWindow({
         width: 800,
         height: 600,
         show: false,
         webPreferences: {
-            preload: path.join(__dirname, "preload.js"),
+            preload: path.join(__dirname, "preload-tabs.js"),
         },
     });
     win.maximize();
     win.show();
 
-    const loadSystem = async function () {
-        if (isDev) {
-            win.loadURL("http://localhost:4200");
-        } else {
-            win.loadFile("app/browser/index.html");
-        }
-    };
+    win.loadFile(path.join(__dirname, "assets/tabs.html"));
 
-    loadSystem();
-
-    win.webContents.on("did-fail-load", () => {
-        loadSystem();
+    const tabManager = createTabManager(win, {
+        loadTab,
+        preload: path.join(__dirname, "preload.js"),
     });
 
-    // require update module
-    const updater = require("./update");
-    updater(win, ipcMain);
+    // The strip only exists once its page is ready to receive state.
+    win.webContents.on("did-finish-load", () => {
+        tabManager.sendState();
+    });
+
+    activeTabManager = tabManager;
+    tabManager.newTab();
+
+    // Menu needs the tab manager, so it is built per-window here rather than at
+    // module load. Reload/DevTools must target the ACTIVE TAB — the roles would
+    // otherwise hit the tab strip.
+    Menu.setApplicationMenu(
+        Menu.buildFromTemplate(
+            buildMenuTemplate({
+                newTab: () => tabManager.newTab(),
+                closeTab: () => tabManager.closeActiveTab(),
+                nextTab: () => tabManager.cycleTab(1),
+                previousTab: () => tabManager.cycleTab(-1),
+                reload: () => tabManager.getActiveWebContents()?.reload(),
+                forceReload: () =>
+                    tabManager.getActiveWebContents()?.reloadIgnoringCache(),
+                toggleDevTools: () =>
+                    tabManager.getActiveWebContents()?.toggleDevTools(),
+            }),
+        ),
+    );
 }
 
 app.whenReady().then(async () => {
+    // Registered ONCE, not per window: createWindow() can run again (macOS
+    // "activate"), and ipcMain.handle throws if a channel is handled twice.
+    // They resolve the tab manager lazily, so they always talk to the live one.
+    ipcMain.on("tabs:new", () => activeTabManager?.newTab());
+    ipcMain.on("tabs:select", (_event, id) => activeTabManager?.setActive(id));
+    ipcMain.on("tabs:close", (_event, id) => activeTabManager?.closeTab(id));
+
+    // update module — broadcast to every tab, not to the tab strip
+    const updater = require("./update");
+    updater(() => activeTabManager?.getAllWebContents() ?? [], ipcMain);
+
     createWindow();
 
     app.on("activate", () => {
