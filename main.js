@@ -4,8 +4,39 @@ const path = require("path");
 const buildMenuTemplate = require("./menu");
 const { createTabManager } = require("./tabs");
 
+// ── single instance ─────────────────────────────────────────────────────────
+// Only one copy of the app may run. A second process would share the same
+// userData / localStorage and open its own duplicate socket connections.
+//
+// The lock is taken as the very first thing, before any window, storage or menu
+// setup, so a second launch quits without ever touching them. Use a new TAB
+// (Ctrl/Cmd+T) rather than a second instance.
+const gotTheLock = app.requestSingleInstanceLock();
+
+/** The one window (the tab strip). Focused when a second launch is attempted. */
+let mainWindow = null;
+
+if (!gotTheLock) {
+    app.quit();
+    // Nothing below this line runs in the second process.
+    return;
+}
+
+// A second launch just brings the window we already have to the front.
+app.on("second-instance", () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    if (!mainWindow.isVisible()) mainWindow.show();
+    mainWindow.focus();
+});
+
 // electron context menu
-contextMenu = require("electron-context-menu");
+// v3 is CommonJS and exports the function directly; v4+ is ESM-only, so under
+// Electron's require(esm) the function arrives on `.default` and the module
+// object itself is not callable. Accept either shape.
+const contextMenuModule = require("electron-context-menu");
+const contextMenu = contextMenuModule.default ?? contextMenuModule;
+
 contextMenu({
     showSaveImageAs: false,
     showSearchWithGoogle: false,
@@ -55,6 +86,12 @@ async function createWindow() {
     });
     win.maximize();
     win.show();
+
+    // referenced by the second-instance handler
+    mainWindow = win;
+    win.on("closed", () => {
+        if (mainWindow === win) mainWindow = null;
+    });
 
     win.loadFile(path.join(__dirname, "assets/tabs.html"));
 
