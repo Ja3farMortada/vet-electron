@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1784131839755,
+  "timestamp": 1784137827260,
   "index": "./index.html",
   "assetGroups": [
     {
@@ -72,8 +72,8 @@
         "./chunk-SDKZDQUL.js",
         "./chunk-SDUVR6PC.js",
         "./chunk-SF6CZU3C.js",
+        "./chunk-SQPXCMEN.js",
         "./chunk-SRY3UOZ6.js",
-        "./chunk-TL2FNDAS.js",
         "./chunk-TQQX7TB5.js",
         "./chunk-UPE4DBYR.js",
         "./chunk-VDIZB7LU.js",
@@ -87,7 +87,7 @@
         "./chunk-ZPTTBRUD.js",
         "./favicon.ico",
         "./index.html",
-        "./main-ZQMDETTK.js",
+        "./main-RJY7JR46.js",
         "./manifest.webmanifest",
         "./polyfills-FFHMD2TL.js",
         "./styles-CUHIYMHN.css"
@@ -190,8 +190,8 @@
     "./chunk-SDKZDQUL.js": "57838889da581344c87c2a76786e7d427c8d3d36",
     "./chunk-SDUVR6PC.js": "fbd357fb3e6b20037c6492406055076ab463541a",
     "./chunk-SF6CZU3C.js": "5f97e356cabf2a76635337645d7dc239c9a34d62",
+    "./chunk-SQPXCMEN.js": "4207d6f84ca815dc8d3600b86c38fdaf7f9ae950",
     "./chunk-SRY3UOZ6.js": "d3331955d269b7665fa9cb63e6f2bf0051b6acae",
-    "./chunk-TL2FNDAS.js": "d046718a8927112eaff606392dbc776d2575ef43",
     "./chunk-TQQX7TB5.js": "334edbb9a635c142239b5e4c872b1521e5c037c3",
     "./chunk-UPE4DBYR.js": "b732fe0d37dcde2f389af357d57d16d3919d31a6",
     "./chunk-VDIZB7LU.js": "aa000247f0ab99eea1813c7a83c09148f114da8f",
@@ -212,8 +212,8 @@
     "./icons/icon-512x512.png": "3fd363804738f4e6e725857a1344952a8df07dc1",
     "./icons/icon-72x72.png": "8b517fe40cca9d72ef98b3d6b8ca38d48742a37e",
     "./icons/icon-96x96.png": "13e417338a8691fe6b07f6fde8c53fa3388eebe0",
-    "./index.html": "5423459dda7bb57e036bd9937952bd9056f692d0",
-    "./main-ZQMDETTK.js": "ae4cbed28972cb62c613a9568f242cbbd2c8dc15",
+    "./index.html": "a70ebd20c3e2e3122a6b31c2496bc64e74bae1ab",
+    "./main-RJY7JR46.js": "288e6c51594d32ab0ce24f010e8daea685eda18d",
     "./manifest.webmanifest": "11b9e1bb9ce69edae1ea8d48e8c74aa94519736a",
     "./media/Inter-italic.var-YRHKCDAA.woff2": "9995712e0ca3cda14c7d6014abe0f979cf57ec53",
     "./media/Inter-roman.var-5VGNBR6A.woff2": "d56a83c1e298702010cde038317713aaef23fe6c",
