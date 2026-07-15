@@ -79,6 +79,13 @@
 
             <div class="row d-flex justify-content-end text-end" v-if="invoice">
                 <div class="col-6 text-end">
+                    <div v-if="Number(invoice.discount) > 0">
+                        Subtotal: {{ formatCurrency(subtotal) }}
+                    </div>
+                    <div v-if="Number(invoice.discount) > 0">
+                        Discount ({{ invoice.discount }}%): -{{
+                        formatCurrency(subtotal - invoice.total_amount) }}
+                    </div>
                     <strong
                         >Grand total: {{ formatCurrency(invoice.total_amount)
                         }}</strong
@@ -96,6 +103,17 @@
                         invoice: null,
                         chunks: [],
                     };
+                },
+                computed: {
+                    // Sum of line totals = the pre-discount subtotal. Shown only
+                    // when the invoice carries an invoice-level discount.
+                    subtotal() {
+                        if (!this.invoice || !this.invoice.items) return 0;
+                        return this.invoice.items.reduce(
+                            (sum, r) => sum + Number(r.total_price || 0),
+                            0,
+                        );
+                    },
                 },
                 methods: {
                     formatCurrency(value) {
