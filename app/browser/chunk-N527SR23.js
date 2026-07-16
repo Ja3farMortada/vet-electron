@@ -1,1 +1,0 @@
-import{a as i}from"./chunk-PZOPFY6F.js";import{R as e,bc as o}from"./chunk-PX5SA6PI.js";var g=(n,s)=>{let t=e(i),r=e(o);return t.isLoggedIn()||r.navigate(["/login"]),t.isLoggedIn()},d=(n,s)=>{let t=e(i),r=e(o);return t.isLoggedIn()||r.navigate(["/login"]),t.isAdmin()};export{g as a,d as b};
