@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Choose label printer</title>
+        <style>
+            :root { color-scheme: light dark; }
+            * { box-sizing: border-box; }
+            body {
+                margin: 0;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                font-size: 14px;
+                display: flex;
+                flex-direction: column;
+                height: 100vh;
+            }
+            header { padding: 14px 16px 6px; }
+            header h1 { margin: 0; font-size: 15px; }
+            header p { margin: 4px 0 0; font-size: 12px; opacity: 0.65; }
+            #list {
+                flex: 1;
+                overflow-y: auto;
+                padding: 8px 10px;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+            label.printer {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 9px 10px;
+                border-radius: 8px;
+                border: 1px solid rgba(128, 128, 128, 0.25);
+                cursor: pointer;
+            }
+            label.printer:hover { background: rgba(128, 128, 128, 0.12); }
+            label.printer input { margin: 0; }
+            .name { font-weight: 600; }
+            .sub { font-size: 11px; opacity: 0.6; }
+            footer {
+                display: flex;
+                justify-content: flex-end;
+                gap: 8px;
+                padding: 10px 14px;
+                border-top: 1px solid rgba(128, 128, 128, 0.25);
+            }
+            button {
+                padding: 7px 16px;
+                border-radius: 7px;
+                border: 1px solid rgba(128, 128, 128, 0.35);
+                background: transparent;
+                font-size: 13px;
+                cursor: pointer;
+            }
+            button.primary {
+                background: #2a78d6;
+                border-color: #2a78d6;
+                color: #fff;
+                font-weight: 600;
+            }
+            button.primary:disabled { opacity: 0.5; cursor: default; }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>Print label to…</h1>
+            <p>This choice is remembered for label printing only.</p>
+        </header>
+        <div id="list" role="radiogroup" aria-label="Printers"></div>
+        <footer>
+            <button id="cancel" type="button">Cancel</button>
+            <button id="ok" type="button" class="primary" disabled>Print</button>
+        </footer>
+
+        <script>
+            const params = new URLSearchParams(location.search);
+            const printers = JSON.parse(params.get("printers") || "[]");
+            const preselected = params.get("selected") || "";
+
+            const list = document.getElementById("list");
+            const ok = document.getElementById("ok");
+
+            const pick = () => document.querySelector('input[name="printer"]:checked');
+
+            for (const printer of printers) {
+                const label = document.createElement("label");
+                label.className = "printer";
+                const radio = document.createElement("input");
+                radio.type = "radio";
+                radio.name = "printer";
+                radio.value = printer.name;
+                if (
+                    printer.name === preselected ||
+                    (!preselected && printer.isDefault)
+                ) {
+                    radio.checked = true;
+                }
+                radio.addEventListener("change", () => (ok.disabled = !pick()));
+                const text = document.createElement("div");
+                const name = document.createElement("div");
+                name.className = "name";
+                name.textContent = printer.displayName || printer.name;
+                text.appendChild(name);
+                if (printer.displayName && printer.displayName !== printer.name) {
+                    const sub = document.createElement("div");
+                    sub.className = "sub";
+                    sub.textContent = printer.name;
+                    text.appendChild(sub);
+                }
+                label.appendChild(radio);
+                label.appendChild(text);
+                list.appendChild(label);
+            }
+            ok.disabled = !pick();
+
+            const submit = () => {
+                const chosen = pick();
+                if (chosen) {
+                    window.electron.send("label-printer-picked", chosen.value);
+                }
+            };
+            const cancel = () => window.electron.send("label-printer-picked", null);
+
+            ok.addEventListener("click", submit);
+            document.getElementById("cancel").addEventListener("click", cancel);
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") submit();
+                if (e.key === "Escape") cancel();
+            });
+        </script>
+    </body>
+</html>
