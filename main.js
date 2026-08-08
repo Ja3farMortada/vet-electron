@@ -1,4 +1,11 @@
-const { app, BrowserWindow, dialog, ipcMain, Menu, shell } = require("electron");
+const {
+    app,
+    BrowserWindow,
+    dialog,
+    ipcMain,
+    Menu,
+    shell,
+} = require("electron");
 const path = require("path");
 const fs = require("fs");
 
@@ -66,7 +73,9 @@ function loadTab(webContents) {
         if (isDev) {
             webContents.loadURL("http://localhost:4200");
         } else {
-            webContents.loadFile(path.join(__dirname, "app/browser/index.html"));
+            webContents.loadFile(
+                path.join(__dirname, "app/browser/index.html"),
+            );
         }
     };
 
@@ -274,7 +283,9 @@ const labelPrinterFile = () =>
 
 function loadSavedLabelPrinter() {
     try {
-        return JSON.parse(fs.readFileSync(labelPrinterFile(), "utf8")).name || null;
+        return (
+            JSON.parse(fs.readFileSync(labelPrinterFile(), "utf8")).name || null
+        );
     } catch {
         return null;
     }
@@ -386,7 +397,11 @@ ipcMain.handle("label-print", async (event, data) => {
         await rendered;
         const success = await new Promise((resolve) => {
             win.webContents.print(
-                { silent: true, deviceName: chosen, marginsType: 0 },
+                {
+                    silent: false,
+                    deviceName: chosen || "XP-365B",
+                    marginsType: 0,
+                },
                 (ok, errorType) => {
                     if (!ok) {
                         console.error("label print failed:", errorType);
