@@ -265,100 +265,12 @@ ipcMain.handle("print-stock", async (event, data) => {
     });
 });
 
-// ── label printing ───────────────────────────────────────────────────────────
-// Labels print SILENTLY to a dedicated device — the OS driver dialog never
-// appears. Instead, on every label request we enumerate printers and show our
-// own small picker (with the previously used label printer preselected), then
-// print straight to the chosen device. The choice is persisted for label
-// printing only.
-//
-// This replaces the old flow, which had three defects: it read `data.printer`
-// while the app sends `printerName` (so the hardcoded "XP-365B" fallback always
-// won), it combined silent:false with deviceName (deviceName only applies to
-// silent printing — on Electron 43 this dies instantly when no printers exist),
-// and it never closed the hidden window, leaking one per printed label.
-
-const labelPrinterFile = () =>
-    path.join(app.getPath("userData"), "label-printer.json");
-
-function loadSavedLabelPrinter() {
-    try {
-        return (
-            JSON.parse(fs.readFileSync(labelPrinterFile(), "utf8")).name || null
-        );
-    } catch {
-        return null;
-    }
-}
-
-function saveLabelPrinter(name) {
-    try {
-        fs.writeFileSync(labelPrinterFile(), JSON.stringify({ name }));
-    } catch (error) {
-        console.error("could not persist label printer choice:", error);
-    }
-}
-
-/**
- * Shows the printer picker and resolves with the chosen printer name, or null
- * when the user cancels (button, Esc, or closing the window).
- */
-function pickLabelPrinter(printers, preselected) {
-    return new Promise((resolve) => {
-        const picker = new BrowserWindow({
-            width: 380,
-            height: 440,
-            resizable: false,
-            minimizable: false,
-            maximizable: false,
-            alwaysOnTop: true,
-            show: false,
-            webPreferences: {
-                preload: path.join(__dirname, "preload.js"),
-            },
-        });
-
-        let settled = false;
-        const settle = (value) => {
-            if (settled) return;
-            settled = true;
-            ipcMain.removeHandler("label-printer-picked");
-            resolve(value);
-            if (!picker.isDestroyed()) picker.close();
-        };
-
-        // The picker page talks through preload's send() → ipcRenderer.invoke,
-        // so this must be a handle()r. Registered per pick; the labelPickerBusy
-        // flag guarantees no double registration.
-        ipcMain.handle("label-printer-picked", (pickEvent, name) => {
-            if (pickEvent.sender === picker.webContents) settle(name ?? null);
-        });
-        picker.on("closed", () => settle(null));
-
-        picker.loadFile("assets/printerPicker.html", {
-            query: {
-                printers: JSON.stringify(
-                    printers.map((p) => ({
-                        name: p.name,
-                        displayName: p.displayName || p.name,
-                        isDefault: !!p.isDefault,
-                    })),
-                ),
-                selected: preselected || "",
-            },
-        });
-        picker.once("ready-to-show", () => picker.show());
-    });
-}
-
+// label print
 let labelPrint;
-let labelPickerBusy = false;
 ipcMain.handle("label-print", async (event, data) => {
-    // one picker at a time — a second request while choosing is dropped
-    if (labelPickerBusy) return { success: false, reason: "picker-open" };
-    labelPickerBusy = true;
-
     labelPrint = new BrowserWindow({
+        // width: 187,
+        // height: 140,
         width: 230,
         height: 180,
         show: false,
@@ -366,57 +278,44 @@ ipcMain.handle("label-print", async (event, data) => {
             preload: path.join(__dirname, "preload.js"),
         },
     });
-    const win = labelPrint;
+    // labelPrint.setMenu(null);
+    labelPrint.loadFile("assets/labelPrint.html");
+    // labelPrint.show();
 
-    try {
-        // Render the label while the user picks the printer.
-        const rendered = new Promise((resolve) => {
-            win.webContents.on("did-finish-load", () => {
-                win.webContents.send("printDocument", data);
-                // barcode (jsbarcode) draws after the data lands — give it a beat
-                setTimeout(resolve, 200);
+    labelPrint.webContents.on("did-finish-load", async function () {
+        await labelPrint.webContents.send("printDocument", data);
+        setTimeout(async function () {
+            // Electron 43 validates deviceName against the live printer list
+            // BEFORE opening the driver dialog: an unknown name rejects the job
+            // outright ("Invalid deviceName provided") and no dialog ever shows.
+            // Older Electron ignored a bad name and fell back to the default,
+            // which is why this same code worked before the upgrade.
+            //
+            // So only pass deviceName when that printer actually exists —
+            // otherwise omit it and let the dialog open on the default printer.
+            const wanted = data.printerName || data.printer || "XP-365B";
+            const printOptions = { silent: false, marginsType: 0 };
+            try {
+                const printers =
+                    await labelPrint.webContents.getPrintersAsync();
+                if (printers.some((printer) => printer.name === wanted)) {
+                    printOptions.deviceName = wanted;
+                } else {
+                    console.log(
+                        `label printer "${wanted}" not found; available:`,
+                        printers.map((printer) => printer.name),
+                    );
+                }
+            } catch (error) {
+                console.log("could not list printers:", error);
+            }
+
+            labelPrint.webContents.print(printOptions, (success, errorType) => {
+                if (!success) {
+                    console.log(errorType);
+                }
+                // labelPrint.close();
             });
-        });
-        win.loadFile("assets/labelPrint.html");
-
-        const printers = await win.webContents.getPrintersAsync();
-        if (!printers.length) {
-            dialog.showErrorBox(
-                "No printers found",
-                "No printers are configured on this computer, so the label cannot be printed.",
-            );
-            return { success: false, reason: "no-printers" };
-        }
-
-        const preselected =
-            loadSavedLabelPrinter() || data.printerName || data.printer || "";
-        const chosen = await pickLabelPrinter(printers, preselected);
-        if (!chosen) return { success: false, reason: "cancelled" };
-        saveLabelPrinter(chosen);
-
-        await rendered;
-        const success = await new Promise((resolve) => {
-            win.webContents.print(
-                {
-                    silent: false,
-                    deviceName: chosen || "XP-365B",
-                    marginsType: 0,
-                },
-                (ok, errorType) => {
-                    if (!ok) {
-                        console.error("label print failed:", errorType);
-                        dialog.showErrorBox(
-                            "Label print failed",
-                            `Printing to "${chosen}" failed: ${errorType || "unknown error"}`,
-                        );
-                    }
-                    resolve(ok);
-                },
-            );
-        });
-        return { success };
-    } finally {
-        labelPickerBusy = false;
-        if (!win.isDestroyed()) win.close();
-    }
+        }, 200);
+    });
 });
