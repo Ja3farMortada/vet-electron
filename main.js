@@ -266,6 +266,10 @@ ipcMain.handle("print-stock", async (event, data) => {
 });
 
 // label print
+// Hardcoded label printer. Must be the system device name exactly as Windows
+// lists it (`Get-Printer | Select-Object Name`) — not the friendly name.
+const LABEL_PRINTER_NAME = "XP-365B";
+
 let labelPrint;
 ipcMain.handle("label-print", async (event, data) => {
     labelPrint = new BrowserWindow({
@@ -282,37 +286,35 @@ ipcMain.handle("label-print", async (event, data) => {
     labelPrint.loadFile("assets/labelPrint.html");
     // labelPrint.show();
 
+    const printOptions = {
+        silent: false,
+        deviceName: data.printer || LABEL_PRINTER_NAME,
+        marginsType: 0,
+    };
     labelPrint.webContents.on("did-finish-load", async function () {
         await labelPrint.webContents.send("printDocument", data);
-        setTimeout(async function () {
-            // Electron 43 validates deviceName against the live printer list
-            // BEFORE opening the driver dialog: an unknown name rejects the job
-            // outright ("Invalid deviceName provided") and no dialog ever shows.
-            // Older Electron ignored a bad name and fell back to the default,
-            // which is why this same code worked before the upgrade.
-            //
-            // So only pass deviceName when that printer actually exists —
-            // otherwise omit it and let the dialog open on the default printer.
-            const wanted = data.printerName || data.printer || "XP-365B";
-            const printOptions = { silent: false, marginsType: 0 };
-            try {
-                const printers =
-                    await labelPrint.webContents.getPrintersAsync();
-                if (printers.some((printer) => printer.name === wanted)) {
-                    printOptions.deviceName = wanted;
-                } else {
-                    console.log(
-                        `label printer "${wanted}" not found; available:`,
-                        printers.map((printer) => printer.name),
-                    );
-                }
-            } catch (error) {
-                console.log("could not list printers:", error);
-            }
-
+        setTimeout(function () {
             labelPrint.webContents.print(printOptions, (success, errorType) => {
-                if (!success) {
-                    console.log(errorType);
+                if (success || errorType === "cancelled") return;
+
+                console.log(errorType);
+
+                // Electron 43 compatibility: Chromium now validates deviceName
+                // against the installed printers BEFORE opening the dialog, so a
+                // name that doesn't match EXACTLY kills the job outright with
+                // "Invalid deviceName provided" and no dialog ever appears.
+                // Older Electron ignored a bad name and just opened the dialog —
+                // which is why this code worked before the upgrade.
+                //
+                // Retry once with no deviceName so the printer/driver popup
+                // still comes up and the printer can be chosen there.
+                if (errorType === "Invalid deviceName provided") {
+                    labelPrint.webContents.print(
+                        { silent: false, marginsType: 0 },
+                        (retried, retryError) => {
+                            if (!retried) console.log(retryError);
+                        },
+                    );
                 }
                 // labelPrint.close();
             });

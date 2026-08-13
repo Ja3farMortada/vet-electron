@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1786197398113,
+  "timestamp": 1786615672194,
   "index": "./index.html",
   "assetGroups": [
     {
@@ -108,7 +108,7 @@
         "./chunk-ZZLIFOUX.js",
         "./favicon.ico",
         "./index.html",
-        "./main-AKAD35D7.js",
+        "./main-BIUXKBMM.js",
         "./manifest.webmanifest",
         "./polyfills-FFHMD2TL.js",
         "./styles-CUHIYMHN.css"
@@ -254,8 +254,8 @@
     "./icons/icon-512x512.png": "3fd363804738f4e6e725857a1344952a8df07dc1",
     "./icons/icon-72x72.png": "8b517fe40cca9d72ef98b3d6b8ca38d48742a37e",
     "./icons/icon-96x96.png": "13e417338a8691fe6b07f6fde8c53fa3388eebe0",
-    "./index.html": "7b4494f28244083b69bdb24a1fc44c71f7786d28",
-    "./main-AKAD35D7.js": "66dfc7d32107c8711bd1402d1b88dbba9161a679",
+    "./index.html": "03d7779163ac02ef8fc99b1e0aa0ca84ac647ac6",
+    "./main-BIUXKBMM.js": "f03cf1a286ded7e023ed0b41708ef3e28c978117",
     "./manifest.webmanifest": "11b9e1bb9ce69edae1ea8d48e8c74aa94519736a",
     "./media/Inter-italic.var-YRHKCDAA.woff2": "9995712e0ca3cda14c7d6014abe0f979cf57ec53",
     "./media/Inter-roman.var-5VGNBR6A.woff2": "d56a83c1e298702010cde038317713aaef23fe6c",
