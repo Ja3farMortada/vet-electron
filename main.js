@@ -288,7 +288,7 @@ ipcMain.handle("label-print", async (event, data) => {
 
     const printOptions = {
         silent: false,
-        deviceName: data.printer || LABEL_PRINTER_NAME,
+        deviceName: LABEL_PRINTER_NAME,
         marginsType: 0,
     };
     labelPrint.webContents.on("did-finish-load", async function () {
