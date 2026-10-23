@@ -173,42 +173,64 @@ ipcMain.handle("open-external", async (event, url) => {
 });
 
 /**
+ * The failureReason Electron reports when the user closes the print dialog.
+ * Same string on Electron 39 and 43 (listed in electron.d.ts under print()).
+ * It is NOT "cancelled" — checking for that let every cancel fall through to
+ * the Save-as-PDF fallback below.
+ */
+const PRINT_JOB_CANCELED = "Print job canceled";
+
+/**
  * Prints the window's content, falling back to Save-as-PDF when printing
  * fails outright.
  *
- * Since the Electron 43 upgrade, webContents.print({silent:false}) no longer
- * opens the macOS print dialog when the machine has NO printers configured —
- * Chromium pre-checks the printer list and immediately invokes the callback
- * with success=false ("No printers available on the network"). The old code's
- * only response was printWindow.close(), so the window flashed open and closed
- * with no dialog and no explanation.
+ * print() can fail before any dialog opens — e.g. "No printers available on
+ * the network" on a machine with no printer installed. Electron reports the
+ * reason ONLY through this callback, and console output goes nowhere on a
+ * packaged app, so the reason is shown to the user before the PDF offer. A
+ * silent fallback is what hid the Electron 43.0–43.1.1 bug where every print
+ * with options failed with "Invalid printer settings" (fixed in 43.2.0).
  *
- * failureReason === "cancelled" means the user closed the dialog themselves —
- * that is a normal outcome, not a failure.
+ * A user cancel is a normal outcome, not a failure — see PRINT_JOB_CANCELED.
  */
 function printWithPdfFallback(win, printOptions, pdfName) {
     win.webContents.print(printOptions, async (success, failureReason) => {
-        if (success || failureReason === "cancelled") {
+        // The print window was closed under us — nothing left to report on.
+        if (win.isDestroyed()) return;
+
+        if (success || failureReason === PRINT_JOB_CANCELED) {
             win.close();
             return;
         }
 
         console.error("print failed:", failureReason);
         try {
-            const { canceled, filePath } = await dialog.showSaveDialog(win, {
-                title: "Printing failed — save as PDF instead",
-                defaultPath: pdfName,
-                filters: [{ name: "PDF", extensions: ["pdf"] }],
+            const { response } = await dialog.showMessageBox(win, {
+                type: "warning",
+                title: "Printing failed",
+                message: "The document could not be printed.",
+                detail: `Reason: ${failureReason || "unknown"}\n\nYou can save it as a PDF instead.`,
+                buttons: ["Save as PDF", "Close"],
+                defaultId: 0,
+                cancelId: 1,
+                noLink: true,
             });
-            if (!canceled && filePath) {
-                const pdf = await win.webContents.printToPDF({});
-                fs.writeFileSync(filePath, pdf);
-                shell.showItemInFolder(filePath);
+            if (response === 0) {
+                const { canceled, filePath } = await dialog.showSaveDialog(win, {
+                    title: "Save as PDF",
+                    defaultPath: pdfName,
+                    filters: [{ name: "PDF", extensions: ["pdf"] }],
+                });
+                if (!canceled && filePath) {
+                    const pdf = await win.webContents.printToPDF({});
+                    fs.writeFileSync(filePath, pdf);
+                    shell.showItemInFolder(filePath);
+                }
             }
         } catch (error) {
             console.error("PDF fallback failed:", error);
         }
-        win.close();
+        if (!win.isDestroyed()) win.close();
     });
 }
 
@@ -270,6 +292,28 @@ ipcMain.handle("print-stock", async (event, data) => {
 // lists it (`Get-Printer | Select-Object Name`) — not the friendly name.
 const LABEL_PRINTER_NAME = "XP-365B";
 
+/**
+ * Tell the operator a label didn't print, and why. Without this a failed label
+ * did nothing visible at all — the reason only reached console.log.
+ *
+ * Parented to the main window, not the label window: that one is never shown,
+ * and a dialog owned by a hidden window can end up invisible.
+ */
+function reportLabelFailure(failureReason) {
+    console.error("label print failed:", failureReason);
+    const options = {
+        type: "warning",
+        title: "Label printing failed",
+        message: "The label could not be printed.",
+        detail: `Printer: ${LABEL_PRINTER_NAME}\nReason: ${failureReason || "unknown"}`,
+        buttons: ["OK"],
+        noLink: true,
+    };
+    return mainWindow && !mainWindow.isDestroyed()
+        ? dialog.showMessageBox(mainWindow, options)
+        : dialog.showMessageBox(options);
+}
+
 let labelPrint;
 ipcMain.handle("label-print", async (event, data) => {
     labelPrint = new BrowserWindow({
@@ -295,27 +339,24 @@ ipcMain.handle("label-print", async (event, data) => {
         await labelPrint.webContents.send("printDocument", data);
         setTimeout(function () {
             labelPrint.webContents.print(printOptions, (success, errorType) => {
-                if (success || errorType === "cancelled") return;
+                if (success || errorType === PRINT_JOB_CANCELED) return;
 
-                console.log(errorType);
-
-                // Electron 43 compatibility: Chromium now validates deviceName
-                // against the installed printers BEFORE opening the dialog, so a
-                // name that doesn't match EXACTLY kills the job outright with
-                // "Invalid deviceName provided" and no dialog ever appears.
-                // Older Electron ignored a bad name and just opened the dialog —
-                // which is why this code worked before the upgrade.
-                //
-                // Retry once with no deviceName so the printer/driver popup
-                // still comes up and the printer can be chosen there.
-                if (errorType === "Invalid deviceName provided") {
-                    labelPrint.webContents.print(
-                        { silent: false, marginsType: 0 },
-                        (retried, retryError) => {
-                            if (!retried) console.log(retryError);
-                        },
-                    );
+                // deviceName is checked against the installed printers before
+                // any dialog opens (Electron 39 and 43 alike), so a name that
+                // doesn't match EXACTLY fails with "Invalid deviceName
+                // provided". Retry once without it so the Windows printer/driver
+                // popup still comes up and the printer can be chosen there.
+                if (errorType !== "Invalid deviceName provided") {
+                    reportLabelFailure(errorType);
+                    return;
                 }
+                labelPrint.webContents.print(
+                    { silent: false, marginsType: 0 },
+                    (retried, retryError) => {
+                        if (retried || retryError === PRINT_JOB_CANCELED) return;
+                        reportLabelFailure(retryError);
+                    },
+                );
                 // labelPrint.close();
             });
         }, 200);

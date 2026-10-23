@@ -1,6 +1,6 @@
 {
     "name": "vet",
-    "version": "2.26.10",
+    "version": "2.26.11",
     "description": "Veterinary",
     "main": "main.js",
     "scripts": {
@@ -44,7 +44,7 @@
         "vue": "^3.5.39"
     },
     "devDependencies": {
-        "electron": "^43.1.1",
+        "electron": "^43.8.3",
         "electron-builder": "^26.15.3"
     }
 }
